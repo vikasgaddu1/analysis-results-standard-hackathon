@@ -1,0 +1,1094 @@
+openapi: 3.0.0
+info:
+  title: Clinical Trial Table Metadata System API
+  description: RESTful API for managing clinical trial table metadata following CDISC ARS standards
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@clinicaltables.com
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Development server
+  - url: https://api.clinicaltables.com/v1
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Common schemas
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    PageInfo:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+
+    # User management schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [admin, editor, viewer]
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+
+    UserCreate:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [admin, editor, viewer]
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+
+    # ARS Model schemas
+    ReportingEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+        version:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        is_locked:
+          type: boolean
+        parent_id:
+          type: string
+
+    ReportingEventCreate:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+        version:
+          type: string
+
+    Analysis:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+        version:
+          type: string
+        reason:
+          type: string
+        purpose:
+          type: string
+        method_id:
+          type: string
+        analysis_set_id:
+          type: string
+        dataset:
+          type: string
+        variable:
+          type: string
+        category_ids:
+          type: array
+          items:
+            type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisResult'
+
+    AnalysisCreate:
+      type: object
+      required:
+        - id
+        - name
+        - method_id
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+        reason:
+          type: string
+        purpose:
+          type: string
+        method_id:
+          type: string
+        analysis_set_id:
+          type: string
+        dataset:
+          type: string
+        variable:
+          type: string
+        category_ids:
+          type: array
+          items:
+            type: string
+
+    AnalysisResult:
+      type: object
+      properties:
+        operation_id:
+          type: string
+        raw_value:
+          type: string
+        formatted_value:
+          type: string
+        result_groups:
+          type: array
+          items:
+            type: object
+            properties:
+              grouping_id:
+                type: string
+              group_id:
+                type: string
+
+    Output:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+        version:
+          type: string
+        category_ids:
+          type: array
+          items:
+            type: string
+        displays:
+          type: array
+          items:
+            $ref: '#/components/schemas/Display'
+
+    Display:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+        version:
+          type: string
+        display_title:
+          type: string
+        order_num:
+          type: integer
+        display_sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisplaySection'
+
+    DisplaySection:
+      type: object
+      properties:
+        section_type:
+          type: string
+        order_num:
+          type: integer
+        sub_sections:
+          type: array
+          items:
+            type: object
+
+    WhereClause:
+      type: object
+      properties:
+        level:
+          type: integer
+        order_num:
+          type: integer
+        clause_type:
+          type: string
+          enum: [condition, compound_expression]
+        condition:
+          $ref: '#/components/schemas/WhereClauseCondition'
+        compound_expression:
+          $ref: '#/components/schemas/WhereClauseCompoundExpression'
+
+    WhereClauseCondition:
+      type: object
+      properties:
+        dataset:
+          type: string
+        variable:
+          type: string
+        comparator:
+          type: string
+          enum: [EQ, NE, GT, LT, GE, LE, IN, NOTIN, CONTAINS]
+        value:
+          type: array
+          items:
+            type: string
+
+    WhereClauseCompoundExpression:
+      type: object
+      properties:
+        logical_operator:
+          type: string
+          enum: [AND, OR, NOT]
+        where_clauses:
+          type: array
+          items:
+            $ref: '#/components/schemas/WhereClause'
+
+    ImportRequest:
+      type: object
+      required:
+        - format
+        - content
+      properties:
+        format:
+          type: string
+          enum: [yaml, json]
+        content:
+          type: string
+          description: Base64 encoded file content
+
+    ExportRequest:
+      type: object
+      required:
+        - format
+      properties:
+        format:
+          type: string
+          enum: [yaml, json, excel]
+        include_results:
+          type: boolean
+          default: false
+
+paths:
+  # Authentication endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        401:
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      responses:
+        200:
+          description: Successful logout
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      responses:
+        200:
+          description: New access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+  # User management endpoints
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, editor, viewer]
+      responses:
+        200:
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  page_info:
+                    $ref: '#/components/schemas/PageInfo'
+
+    post:
+      tags:
+        - Users
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        201:
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{user_id}:
+    get:
+      tags:
+        - Users
+      summary: Get user details
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User not found
+
+    put:
+      tags:
+        - Users
+      summary: Update user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        200:
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: User deleted
+
+  # Reporting Event endpoints
+  /reporting-events:
+    get:
+      tags:
+        - Reporting Events
+      summary: List reporting events
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of reporting events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReportingEvent'
+                  page_info:
+                    $ref: '#/components/schemas/PageInfo'
+
+    post:
+      tags:
+        - Reporting Events
+      summary: Create reporting event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingEventCreate'
+      responses:
+        201:
+          description: Reporting event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingEvent'
+
+  /reporting-events/{event_id}:
+    get:
+      tags:
+        - Reporting Events
+      summary: Get reporting event details
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Reporting event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingEvent'
+        404:
+          description: Reporting event not found
+
+    put:
+      tags:
+        - Reporting Events
+      summary: Update reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingEventCreate'
+      responses:
+        200:
+          description: Reporting event updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingEvent'
+
+    delete:
+      tags:
+        - Reporting Events
+      summary: Delete reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Reporting event deleted
+
+  /reporting-events/{event_id}/clone:
+    post:
+      tags:
+        - Reporting Events
+      summary: Clone reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_id:
+                  type: string
+                new_name:
+                  type: string
+      responses:
+        201:
+          description: Reporting event cloned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingEvent'
+
+  /reporting-events/{event_id}/lock:
+    post:
+      tags:
+        - Reporting Events
+      summary: Lock reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Reporting event locked
+
+  /reporting-events/{event_id}/unlock:
+    post:
+      tags:
+        - Reporting Events
+      summary: Unlock reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Reporting event unlocked
+
+  # Analysis endpoints
+  /reporting-events/{event_id}/analyses:
+    get:
+      tags:
+        - Analyses
+      summary: List analyses for reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        200:
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Analysis'
+                  page_info:
+                    $ref: '#/components/schemas/PageInfo'
+
+    post:
+      tags:
+        - Analyses
+      summary: Create analysis
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisCreate'
+      responses:
+        201:
+          description: Analysis created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analysis'
+
+  /analyses/{analysis_id}:
+    get:
+      tags:
+        - Analyses
+      summary: Get analysis details
+      parameters:
+        - name: analysis_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Analysis details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analysis'
+        404:
+          description: Analysis not found
+
+    put:
+      tags:
+        - Analyses
+      summary: Update analysis
+      parameters:
+        - name: analysis_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisCreate'
+      responses:
+        200:
+          description: Analysis updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analysis'
+
+    delete:
+      tags:
+        - Analyses
+      summary: Delete analysis
+      parameters:
+        - name: analysis_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Analysis deleted
+
+  /analyses/{analysis_id}/results:
+    post:
+      tags:
+        - Analyses
+      summary: Add analysis results
+      parameters:
+        - name: analysis_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AnalysisResult'
+      responses:
+        201:
+          description: Results added
+
+  # Output endpoints
+  /reporting-events/{event_id}/outputs:
+    get:
+      tags:
+        - Outputs
+      summary: List outputs for reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        200:
+          description: List of outputs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Output'
+                  page_info:
+                    $ref: '#/components/schemas/PageInfo'
+
+    post:
+      tags:
+        - Outputs
+      summary: Create output
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Output'
+      responses:
+        201:
+          description: Output created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Output'
+
+  # Import/Export endpoints
+  /reporting-events/{event_id}/import:
+    post:
+      tags:
+        - Import/Export
+      summary: Import reporting event data
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+      responses:
+        200:
+          description: Data imported successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  imported:
+                    type: object
+                    properties:
+                      analyses:
+                        type: integer
+                      outputs:
+                        type: integer
+                      methods:
+                        type: integer
+
+  /reporting-events/{event_id}/export:
+    post:
+      tags:
+        - Import/Export
+      summary: Export reporting event data
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        200:
+          description: Data exported successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  format:
+                    type: string
+                  content:
+                    type: string
+                    description: Base64 encoded file content
+                  filename:
+                    type: string
+
+  # Validation endpoints
+  /reporting-events/{event_id}/validate:
+    post:
+      tags:
+        - Validation
+      summary: Validate reporting event
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Validation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        message:
+                          type: string
+                        path:
+                          type: string
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        message:
+                          type: string
+                        path:
+                          type: string
+
+  # Template endpoints
+  /templates:
+    get:
+      tags:
+        - Templates
+      summary: List available templates
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [analysis, output, method, reporting_event]
+      responses:
+        200:
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    type:
+                      type: string
+                    is_standard:
+                      type: boolean
+                    category:
+                      type: string
+
+  /templates/{template_id}/apply:
+    post:
+      tags:
+        - Templates
+      summary: Apply template to reporting event
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reporting_event_id:
+                  type: string
+                options:
+                  type: object
+      responses:
+        200:
+          description: Template applied successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  created:
+                    type: object
