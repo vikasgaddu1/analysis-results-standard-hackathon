@@ -1,4 +1,166 @@
-## Description
+# Clinical Trial Table Metadata System
+
+A comprehensive platform for creating, managing, and standardizing analysis metadata for clinical trials according to the CDISC Analysis Results Standard (ARS).
+
+## 🎯 Key Features
+
+- **Standards Compliant**: Built on CDISC Analysis Results Standard (ARS)
+- **User-Friendly**: Intuitive wizards and visual designers
+- **Collaborative**: Real-time collaboration with version control
+- **Extensible**: API-first architecture with comprehensive integrations
+- **Scalable**: From single-user to enterprise deployments
+
+## 🚀 Quick Start
+
+Get up and running in minutes:
+
+```bash
+# Clone the repository
+git clone https://github.com/cdisc-org/analysis-results-standard.git
+cd analysis-results-standard
+
+# Quick setup
+./setup-infrastructure.sh all
+
+# Start the application
+./deploy.sh dev start
+```
+
+Access the application at http://localhost:3000
+
+**New to the system?** Check out our [Quick Start Guide](docs/QUICK_START.md) for a 15-minute tutorial.
+
+## 📚 Documentation
+
+| Resource | Description |
+|----------|-------------|
+| **[Quick Start Guide](docs/QUICK_START.md)** | 15-minute tutorial to get started |
+| **[User Guide](docs/USER_GUIDE.md)** | Complete feature documentation |
+| **[Installation Guide](docs/INSTALLATION.md)** | Setup and configuration |
+| **[API Documentation](docs/API_DOCUMENTATION.md)** | Developer reference |
+| **[FAQ](docs/FAQ.md)** | Common questions and answers |
+
+[📖 View All Documentation](docs/)
+
+## 🏗️ Architecture
+
+The system consists of:
+- **Frontend**: React/TypeScript application
+- **Backend**: FastAPI with Python
+- **Database**: PostgreSQL for data persistence
+- **Cache**: Redis for performance
+- **Deployment**: Docker and Kubernetes ready
+
+## 🎯 Use Cases
+
+### For Statistical Programmers
+- Create standardized analysis specifications
+- Generate programming code templates
+- Validate analysis compliance
+- Export to SAS/R/Python formats
+
+### For Biostatisticians
+- Design analysis plans visually
+- Collaborate on statistical methods
+- Review and approve specifications
+- Ensure regulatory compliance
+
+### For Data Managers
+- Standardize analysis metadata
+- Manage template libraries
+- Track analysis lineage
+- Export for submissions
+
+## 🚦 Project Status
+
+- ✅ **Phase 1**: Foundation (Complete)
+- ✅ **Phase 2**: Core Features (Complete) 
+- ✅ **Phase 3**: Advanced Features (Complete)
+- ✅ **Phase 4**: Polish & Deploy (Complete)
+
+Current version: **v1.0** - Production Ready
+
+## 🛠️ Technology Stack
+
+**Backend:**
+- Python 3.11+
+- FastAPI
+- PostgreSQL
+- Redis
+- Docker
+
+**Frontend:**
+- React 18+
+- TypeScript
+- Ant Design
+- Vite
+
+**Infrastructure:**
+- Docker Compose
+- Kubernetes
+- GitHub Actions
+- Monitoring & Logging
+
+## 📋 System Requirements
+
+**Minimum:**
+- 4 GB RAM
+- 20 GB storage
+- Modern web browser
+
+**Recommended:**
+- 8+ GB RAM
+- 100+ GB SSD
+- High-speed internet
+
+## 🔧 Installation Options
+
+### Docker Compose (Recommended)
+```bash
+./deploy.sh dev start
+```
+
+### Kubernetes
+```bash
+kubectl apply -f k8s/
+```
+
+### Cloud Deployment
+Supports AWS, Azure, GCP with managed services.
+
+See [Installation Guide](docs/INSTALLATION.md) for detailed instructions.
+
+## 🤝 Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Quick Contribution Steps
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests
+5. Submit a pull request
+
+## 🔐 Security
+
+- Industry-standard encryption
+- Role-based access control
+- Audit logging
+- GDPR/HIPAA compliance ready
+- Regular security updates
+
+## 📞 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/cdisc-org/analysis-results-standard/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cdisc-org/analysis-results-standard/discussions)
+- **Community**: [CDISC Community](https://www.cdisc.org/)
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🏆 CDISC Analysis Results Standard
 
 The goals of CDISC Analysis Results Standards team is to develop:
   - Analysis Results Metadata Technical Specification (ARM-TS), to support automation, traceability, and creation of data displays

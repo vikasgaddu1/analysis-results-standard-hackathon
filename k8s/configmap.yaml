@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ars-config
+  namespace: ars-system
+data:
+  # Database configuration
+  POSTGRES_DB: "ars_db"
+  POSTGRES_USER: "ars_user"
+  
+  # Backend configuration
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+  LOG_LEVEL: "info"
+  ENVIRONMENT: "production"
+  
+  # CORS origins
+  CORS_ORIGINS: "https://yourdomain.com"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ars-secrets
+  namespace: ars-system
+type: Opaque
+stringData:
+  # Database passwords
+  POSTGRES_PASSWORD: "your-secure-password-here"
+  REDIS_PASSWORD: "your-redis-password-here"
+  
+  # Backend secrets
+  SECRET_KEY: "your-very-secure-secret-key-here"
+  
+  # Optional: Email configuration
+  SMTP_PASSWORD: "your-email-password-here"
+  
+  # Optional: AWS credentials
+  AWS_ACCESS_KEY_ID: "your-aws-access-key"
+  AWS_SECRET_ACCESS_KEY: "your-aws-secret-key"

@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:wiki.cdisc.org)"
+      "WebFetch(domain:wiki.cdisc.org)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(chmod:*)",
+      "Bash(rm:*)",
+      "Bash(python:*)",
+      "Bash(pip3 install:*)",
+      "Bash(rg:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

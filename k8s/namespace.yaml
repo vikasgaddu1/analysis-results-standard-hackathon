@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ars-system
+  labels:
+    name: ars-system
+    app: clinical-trial-metadata

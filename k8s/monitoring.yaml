@@ -1,0 +1,123 @@
+# Prometheus ServiceMonitor for backend metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ars-backend-metrics
+  namespace: ars-system
+  labels:
+    app: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ars-dashboard
+  namespace: ars-system
+  labels:
+    grafana_dashboard: "1"
+data:
+  ars-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "ARS System Dashboard",
+        "tags": ["ars", "clinical-trial"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Backend Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"backend-service\"}[5m]))",
+                "legendFormat": "95th percentile"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Backend Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"backend-service\"}[5m])",
+                "legendFormat": "Requests/sec"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Database Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pg_stat_database_numbackends{datname=\"ars_db\"}",
+                "legendFormat": "Active connections"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "5s"
+      }
+    }
+
+---
+# Alerting rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ars-alerts
+  namespace: ars-system
+spec:
+  groups:
+  - name: ars.rules
+    rules:
+    - alert: BackendDown
+      expr: up{job="backend-service"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Backend service is down"
+        description: "Backend service has been down for more than 1 minute."
+
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is above 10% for the last 5 minutes."
+
+    - alert: DatabaseConnectionsHigh
+      expr: pg_stat_database_numbackends{datname="ars_db"} > 80
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High number of database connections"
+        description: "Database has more than 80 active connections."
+
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod is crash looping"
+        description: "Pod {{ $labels.pod }} is crash looping."
